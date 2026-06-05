@@ -1,12 +1,13 @@
 import os
+import time, datetime, random
 
 from .orchestrator import Orchestrator
 from .context import LoadScenario
 from .agents import AgentFactory
 from .memory import SharedMemory
 from .logs import Logger
-import time, datetime, random
 from dotenv import load_dotenv
+from .llm.llm_provider_keys import PROVIDER_API_KEY_ENV
 
 load_dotenv()
 
@@ -22,7 +23,7 @@ def main():
     context = LoadScenario.load(args.config)
 
     logger = Logger(scenario_id=context.get("scenario", {}).get("id", None))
-    api_key = os.getenv('OPEN_AI_KEY')
+    api_key = os.getenv('OPENAI_API_KEY')
 
     print(f"[Main] Starting simulation at {timestamp}")
 
@@ -32,36 +33,44 @@ def main():
     try:
         re_agents = {}
         user_agents = {}
+        helper_agent = None
 
-        agent_configs = context.get("re_agents", []) + context.get("user_agents", [])
-        
+        agent_configs = (
+            context.get("re_agents", []) +
+            context.get("user_agents", []) +
+            context.get("helper_agent", [])
+        )
+
         for agent_config in agent_configs:
-            effective_api_key = agent_config.get('api_key') or api_key
+            provider = agent_config.get("provider", "").upper()
+            env_var = PROVIDER_API_KEY_ENV.get(provider)
+
+            effective_api_key = None
+            if env_var:
+                effective_api_key = os.getenv(env_var)
+                if not effective_api_key:
+                    raise ValueError(
+                        f"Provider '{provider}' requires an API key. "
+                        f"Set {env_var} in your .env file."
+                    )
+
             agent_cfg = {**agent_config, 'api_key': effective_api_key}
-            
-            agent = AgentFactory.create_agent(agent_cfg, context.get("scenario").get("description", ""),
-                                               seed=seed, scenarioTruths=context.get("scenarioTruths", []))
+            agent = AgentFactory.create_agent(
+                agent_cfg,
+                context.get("scenario").get("description", ""),
+                seed=seed,
+                scenarioTruths=context.get("scenarioTruths", [])
+            )
+
             if agent.role == 1:
                 re_agents[agent.name] = agent
             elif agent.role == 2:
                 user_agents[agent.name] = agent
-            print(f"[LLM Factory] Created agent: {agent.name} Role: ({agent.role})")
-        
-        helper_agent = AgentFactory.create_agent(
-            {
-                'name': 'Analyst Agent',
-                'role': 3,
-                'model': 'gpt-4o-mini',
-                'provider': 'OPENAI',
-                'params': {
-                    'temperature': 0,
-                },
-                'context_prompt': None,
-                'api_key': api_key,
-            }, context.get("scenario").get("description", ""), seed=seed
-        )
+            elif agent.role == 3:
+                helper_agent = agent
 
-        print(f"[LLM Factory] Created agent: {helper_agent.name} ({helper_agent.role})")
+            print(f"[LLM Factory] Created agent: {agent.name} Role: ({agent.role})")
+    
 
         orchestrator = Orchestrator(
             re_agents=re_agents,

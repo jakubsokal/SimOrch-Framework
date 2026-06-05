@@ -2,31 +2,9 @@ import { type FC } from 'react';
 import { Bot, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import FormInput from './shared/FormInput';
 import Button from './shared/Button';
-import LLMSetup, { type Provider } from './shared/LLMSetup';
+import LLMSetup from './shared/LLMSetup';
 import SelectButton from './shared/SelectButton';
-
-export interface REAgentConfig {
-  name: string;
-  role?: number; // 1 for RE Agent, 2 for User Agent
-  persona: {
-    experience_level: string;
-    questioning_strategy: string;
-    probing_intensity: string;
-    requirement_focus: string;
-    tone: string;
-    output_prefixes: string[];
-  },
-  provider: Provider;
-  model: string;
-  params: {
-    temperature: number;
-    top_p: number;
-    max_tokens: number;
-  };
-  context_prompt: string;
-  api_key?: string;
-
-}
+import { type REAgentConfig, DEFAULT_RE_AGENT } from '../types/agentConfigs';
 
 interface REAgentConfigCardProps {
   predefined?: boolean;
@@ -60,27 +38,6 @@ const LABELS: Record<string, string> = {
   max_tokens: 'Max Tokens',
 };
 
-export const DEFAULT_AGENT: REAgentConfig = {
-  name: '',
-  role: 1,
-  persona: {
-    experience_level: '',
-    questioning_strategy: '',
-    probing_intensity: '',
-    requirement_focus: '',
-    tone: '',
-    output_prefixes: ['FR', 'NFR', 'CON'],
-  },
-  provider: 'ollama',
-  model: 'llama2',
-  params: {
-    temperature: 0.0,
-    top_p: 1.0,
-    max_tokens: 512
-  },
-  context_prompt: '',
-  api_key: '',
-};
 
 const REAgentConfigCard: FC<REAgentConfigCardProps> = ({ predefined, agents, onChange, onNext, onBack }) => {
   const updateAgent = (index: number, updated: REAgentConfig) => {
@@ -97,7 +54,7 @@ const REAgentConfigCard: FC<REAgentConfigCardProps> = ({ predefined, agents, onC
     updateAgent(index, { ...agent, persona: { ...agent.persona, output_prefixes: prefixes } });
   };
 
-  const addAgent = () => onChange([...agents, { ...DEFAULT_AGENT }]);
+  const addAgent = () => onChange([...agents, { ...DEFAULT_RE_AGENT }]);
 
   const removeAgent = (index: number) => onChange(agents.filter((_, i) => i !== index));
 

@@ -1,0 +1,7 @@
+PROVIDER_API_KEY_ENV = {
+    "OPENAI":    "OPENAI_API_KEY",
+    "ANTHROPIC": "ANTHROPIC_API_KEY",
+    "GROQ":      "GROQ_API_KEY",
+    "GEMINI":    "GEMINI_API_KEY",
+    "OLLAMA":    None,
+}

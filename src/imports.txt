@@ -6,6 +6,9 @@ PyYAML
 # LLM providers
 langchain-openai
 langchain-ollama
+langchain-anthropic
+langchain-google-genai
+langchain-groq
 
 # Evaluation
 scikit-learn

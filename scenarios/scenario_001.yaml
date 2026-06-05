@@ -17,7 +17,7 @@ scenario:
     requirements.
   domain: Corporate
   system_type: Booking System
-  max_turns: 12
+  max_turns: 5
   conversation_type: dynamic
 
 scenarioTruths:
@@ -133,3 +133,12 @@ user_agents:
       - Ability to override or cancel any booking if there is a priority conflict
       - Automatic release of rooms if a meeting has not started within 10 minutes
       - Reports on room utilisation to justify space planning decisions
+
+helper_agent:
+  - name: Analyst Agent
+    role: 3
+    provider: openai
+    model: gpt-4o-mini
+    params:
+      temperature: 0
+      top_p: 1

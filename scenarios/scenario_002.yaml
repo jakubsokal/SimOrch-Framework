@@ -159,3 +159,12 @@ user_agents:
       - A way to run quick reports without manually counting spreadsheet rows
       - You would consider allowing employees to view their own assigned assets 
        if they had no ability to edit anything, but you have not thought this through fully
+
+helper_agent:
+  - name: Analyst Agent
+    role: 3
+    provider: openai
+    model: gpt-4o-mini
+    params:
+      temperature: 0
+      top_p: 1

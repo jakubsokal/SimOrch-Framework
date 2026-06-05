@@ -1,7 +1,7 @@
 import { type FC } from 'react';
 import { AgentType, AgentTypeLabels } from '../types/agentType';
-import { type REAgentConfig } from './ReAgentConfigCard';
-import { type UserAgentConfig } from './UserAgentConfigCard';
+
+import { type REAgentConfig, type UserAgentConfig } from '../types/agentConfigs';
 
 type ScenarioConfig = {
     scenario: {

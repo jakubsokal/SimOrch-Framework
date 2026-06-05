@@ -22,7 +22,7 @@ class AgentFactory:
             name = agent_cfg['name'],
             role = agent_cfg['role'],
             llm = llm,
-            context_prompt=agent_cfg['context_prompt'],
+            context_prompt=agent_cfg.get('context_prompt', None),
             description=description,
             max_words=agent_cfg.get('max_words', 500),
             persona=agent_cfg.get('persona', None),

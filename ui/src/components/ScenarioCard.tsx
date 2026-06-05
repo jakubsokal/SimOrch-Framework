@@ -3,9 +3,9 @@ import { ChevronRight } from 'lucide-react';
 import FormInput from './shared/FormInput';
 import FormTextarea from './shared/FormTextarea';
 import Button from './shared/Button';
-import type { UserAgentConfig } from './UserAgentConfigCard';
-import type { REAgentConfig } from './ReAgentConfigCard';
 import type { Requirement } from './ScenarioTruthCard';
+import { type REAgentConfig, type UserAgentConfig, type HelperAgentConfig } from '../types/agentConfigs';
+import { type CustomScenarioData, DEFAULT_CUSTOM_SCENARIO } from '../types/simulation';
 
 export interface PredefinedScenario {
   scenario: {
@@ -21,38 +21,13 @@ export interface PredefinedScenario {
   scenarioTruths: Requirement[];
   re_agents: REAgentConfig[];
   user_agents: UserAgentConfig[];
-}
-
-export interface CustomScenarioData {
-  scenario: {
-    id: string;
-    scenario_name: string;
-    seed: number;
-    description: string;
-    domain: string;
-    system_type: string;
-    max_turns: number;
-    conversation_type: string;
-  };
+  helper_agent: HelperAgentConfig[];
 }
 
 export type ScenarioSelection =
   | { mode: 'none' }
   | { mode: 'predefined'; scenario: PredefinedScenario }
   | { mode: 'custom'; scenario: CustomScenarioData };
-
-export const DEFAULT_CUSTOM_SCENARIO: CustomScenarioData = {
-  scenario: {
-    id: '',
-    scenario_name: '',
-    seed: 0,
-    description: '',
-    domain: '',
-    system_type: '',
-    max_turns: 0,
-    conversation_type: '',
-  },
-};
 
 interface ScenarioCardProps {
   selection: ScenarioSelection;

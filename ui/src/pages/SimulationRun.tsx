@@ -5,17 +5,21 @@ import Breadcrumbs from '@mui/material/Breadcrumbs';
 import Link from '@mui/material/Link';
 import ScenarioCard from '../components/ScenarioCard';
 import ScenarioTruthsCard, { type Requirement } from '../components/ScenarioTruthCard';
-import REAgentConfigCard, { type REAgentConfig, DEFAULT_AGENT as DEFAULT_RE_AGENT } from '../components/ReAgentConfigCard';
-import UserAgentConfigCard, { type UserAgentConfig, DEFAULT_AGENT as DEFAULT_USER_AGENT } from '../components/UserAgentConfigCard';
 import { type PredefinedScenario, type ScenarioSelection } from '../components/ScenarioCard';
 import { initiateSimulation } from '../api/simulation';
 import { getScenarios } from '../api/run';
 import PopUp from '../components/shared/PopUp';
-import { useSimulation } from '../components/SimulationContext';
+import {type REAgentConfig, DEFAULT_RE_AGENT, type UserAgentConfig, DEFAULT_USER_AGENT, type HelperAgentConfig, DEFAULT_HELPER_AGENT} from '../types/agentConfigs';
+import { useSimulation } from '../hooks/useSimulation';
+import axios from 'axios';  
+import HelperAgentConfigCard from '../components/HelperAgentConfigCard';
+import REAgentConfigCard from '../components/ReAgentConfigCard';
+import UserAgentConfigCard from '../components/UserAgentConfigCard';
 
 const STEPS = [
   { id: 'scenario-select', label: 'Scenario Select' },
   { id: 'scenario-truths', label: 'Scenario Truths' },
+  { id: 'helper-agent', label: 'Helper Agent Config' },
   { id: 're-agents', label: 'RE Agent Config' },
   { id: 'user-agents', label: 'User Agent Config' },
 ];
@@ -27,6 +31,7 @@ export default function SimulationRun() {
   const [scenarioTruths, setScenarioTruths] = useState<Requirement[]>([{ id: 'R1', type: 'FR', statement: '' }]);
   const [reAgents, setReAgents] = useState<REAgentConfig[]>([{ ...DEFAULT_RE_AGENT }]);
   const [userAgents, setUserAgents] = useState<UserAgentConfig[]>([{ ...DEFAULT_USER_AGENT }]);
+  const [helperAgent, setHelperAgent] = useState<HelperAgentConfig>(DEFAULT_HELPER_AGENT );
   const [currentStep, setCurrentStep] = useState(0);
 
   const isPredefined = selection.mode === 'predefined';
@@ -81,49 +86,50 @@ export default function SimulationRun() {
   }, []);
 
   async function startSimulation() {
-    try {
-      const customConversationType = isCustom ? (userAgents.length > 1 ? 'dynamic' : 'one_to_one') : undefined;
+  try {
+    const customConversationType = isCustom
+      ? userAgents.length > 1 ? 'dynamic' : 'one_to_one'
+      : undefined;
 
-      const config = isPredefined
-        ? {
-            scenario: selection.scenario.scenario,
-            scenarioTruths: selection.scenario.scenarioTruths,
-            re_agents: selection.scenario.re_agents,
-            user_agents: selection.scenario.user_agents,
-          }
-        : {
-            scenario: isCustom
-              ? {
-                  ...selection.scenario.scenario,
-                  id: `scenario_${String(predefinedScenarios.length + 1).padStart(3, '0')}`,
-                  conversation_type: customConversationType ?? selection.scenario.scenario.conversation_type,
-                }
-              : null,
-            scenarioTruths,
-            re_agents: reAgents,
-            user_agents: userAgents,
-          };
+    const config = isPredefined
+      ? {
+          scenario: selection.scenario.scenario,
+          scenarioTruths: selection.scenario.scenarioTruths,
+          re_agents: selection.scenario.re_agents,
+          user_agents: selection.scenario.user_agents,
+          helper_agent: selection.scenario.helper_agent,
+        }
+      : {
+          scenario: isCustom
+            ? {
+                ...selection.scenario.scenario,
+                id: `scenario_${String(predefinedScenarios.length + 1).padStart(3, '0')}`,
+                conversation_type: customConversationType ?? selection.scenario.scenario.conversation_type,
+              }
+            : null,
+          scenarioTruths,
+          re_agents: reAgents,
+          user_agents: userAgents,
+          helper_agent: helperAgent,
+        };
 
-      console.log('Initiating simulation with config:', config);
-      await initiateSimulation(config);
-      setSimulationRunning(true);
-      localStorage.setItem('simulationRunning', 'true');
+    await initiateSimulation(config);
+    setSimulationRunning(true);
+    localStorage.setItem('simulationRunning', 'true');
+    addPopUp({ type: 'success', message: 'Simulation initiated successfully!' });
 
-      addPopUp({
-        type: 'success',
-        message: 'Simulation initiated successfully!',
-      });
-    } catch (error) {
-      console.error('Error initiating simulation:', error);
-      addPopUp({
-        type: 'error',
-        message: 'Failed to initiate simulation.',
-        description: (error as any)?.response?.data?.detail || 'An unexpected error occurred.',
-      });
-    } finally {
-      setSimulationRunning(false);
+  } catch (error) {
+    let message = 'An unexpected error occurred.';
+    if (axios.isAxiosError(error)) {
+      message = error.response?.data?.detail ?? error.message;
     }
+    addPopUp({
+      type: 'error',
+      message: 'Failed to initiate simulation.',
+      description: message,
+    });
   }
+}
 
   useEffect(() => {
     if (!simulationRunning) return;
@@ -156,7 +162,7 @@ export default function SimulationRun() {
     };
 
     return () => events.close();
-  }, [simulationRunning]);
+  }, [simulationRunning, addPopUp, setSimulationRunning]);
 
   return (
     <div className="h-screen w-screen flex bg-gray-50 overflow-hidden">
@@ -235,16 +241,26 @@ export default function SimulationRun() {
           )}
 
           {currentStep === 2 && (
+            <HelperAgentConfigCard
+              predefined={isPredefined}
+              agent={isPredefined ? selection.scenario.helper_agent[0] : helperAgent}
+              onChange={setHelperAgent}
+              onNext={() => setCurrentStep(3)}
+              onBack={() => setCurrentStep(1)}
+            />
+          )}          
+
+          {currentStep === 3 && (
             <REAgentConfigCard
               predefined={isPredefined}
               agents={isPredefined ? selection.scenario.re_agents : reAgents}
               onChange={setReAgents}
-              onNext={() => setCurrentStep(3)}
-              onBack={() => setCurrentStep(1)}
+              onNext={() => setCurrentStep(4)}
+              onBack={() => setCurrentStep(2)}
             />
           )}
 
-          {currentStep === 3 && (
+          {currentStep === 4 && (
             <UserAgentConfigCard
               predefined={isPredefined}
               agents={isPredefined ? selection.scenario.user_agents : userAgents}

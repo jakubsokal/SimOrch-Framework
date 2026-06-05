@@ -1,41 +1,28 @@
 import { type FC, useState } from 'react';
 import { ChevronDown, FileText, User, Clock } from 'lucide-react';
+import { type Requirement, type Message } from '../types/simulation';
 
 interface RequirementCardProps {
-    requirement: any;
-    messageById?: Record<string, any>;
+    requirement: Requirement;
+    messageById?: Record<string, Message>;
 }
 
 const RequirementCard: FC<RequirementCardProps> = ({ requirement, messageById }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const reqId = requirement.req_id ?? requirement.id ?? 'N/A';
-    const type = requirement.requirement?.type ?? requirement.type ?? 'functional';
-    const turn = requirement.turn_id ?? requirement.turn ?? 0;
-    const evidence =
-        requirement.requirement?.evidence_quote ??
-        requirement.requirement?.traceability?.evidence_quote ??
-        requirement.evidence_quote ??
-        requirement.traceability?.evidence_quote ??
-        '';
-    const createdBy = requirement.requirement?.createdBy ?? requirement.createdBy ?? 'Unknown';
-    const timestamp = requirement.requirement?.timestamp ?? requirement.timestamp ?? '';
-    const description = requirement.requirement?.description ?? requirement.description ?? '';
-
-    const traceMessageId = requirement.requirement?.trace_message_id ?? requirement.trace_message_id ?? null;
-    const tracedMessage = traceMessageId != null ? messageById?.[String(traceMessageId)] : undefined;
+    const reqId = requirement.req_id;
+    const type = requirement.requirement.type;
+    const turn = requirement.turn_id;
+    const evidence = requirement.requirement.evidence_quote;
+    const createdBy = requirement.createdBy;
+    const timestamp = requirement.timestamp;
+    const description = requirement.requirement.description;
+    const traceMessageId = requirement.trace_message_id;
+    const tracedMessage = messageById?.[String(traceMessageId)];
+    const originalMessage = tracedMessage?.message ?? '';
     const originalMessageAuthor = tracedMessage?.agent ?? createdBy;
-
-    const originalMessage =
-        requirement.requirement?.original_message ??
-        requirement.original_message ??
-        requirement.requirement?.message ??
-        requirement.message ??
-        tracedMessage?.message ??
-        '';
-
-    const originalMessageId = traceMessageId ?? 'N/A';
-    const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleString() : 'N/A';
+    const formattedTimestamp = new Date(timestamp).toLocaleString();
+    
 
     return (
         <div className="border border-gray-200 rounded-lg bg-white hover:shadow-md transition-shadow">
@@ -102,7 +89,7 @@ const RequirementCard: FC<RequirementCardProps> = ({ requirement, messageById })
                         <div>
                             <div className="flex items-center gap-2 mb-2">
                                 <FileText className="w-4 h-4 text-gray-500" />
-                                <p className="text-xs font-bold text-gray-800">Original Message (ID: {originalMessageId})</p>
+                                <p className="text-xs font-bold text-gray-800">Original Message (ID: {traceMessageId})</p>
                             </div>
                             <div className="border border-gray-200 rounded bg-white p-4">
                                 <div className="flex items-center gap-2 mb-2">

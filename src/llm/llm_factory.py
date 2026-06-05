@@ -22,6 +22,7 @@ def get_model_params(provider, params):
     return params
 
 class LLMFactory:
+    @staticmethod
     def create_llm(llm_cfg, seed):
         api_key =llm_cfg.get('api_key')
         

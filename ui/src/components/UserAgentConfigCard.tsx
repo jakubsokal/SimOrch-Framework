@@ -2,30 +2,9 @@ import { type FC } from 'react';
 import { ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 import FormInput from './shared/FormInput';
 import Button from './shared/Button';
-import { type Provider } from './shared/LLMSetup';
 import LLMSetup from './shared/LLMSetup';
 import SelectButton from './shared/SelectButton';
-
-export interface UserAgentConfig {
-    name: string;
-    role?: number; // 1 for RE Agent, 2 for User Agent
-    persona: { 
-        communication_style: string;
-        domain_knowledge_level: string;
-        clarity_level: string;
-        revelation_strategy: string;
-        revelation_rate: string;
-    },
-    provider: Provider;
-    model: string;
-    params: {
-        temperature: number;
-        top_p: number;
-        max_tokens: number;
-    };
-    context_prompt: string;
-    api_key?: string;
-}
+import { type UserAgentConfig, DEFAULT_USER_AGENT } from '../types/agentConfigs';
 
 interface UserAgentConfigCardProps {
     predefined?: boolean;
@@ -57,33 +36,12 @@ const LABELS: Record<string, string> = {
     max_tokens: 'Max Tokens',
 };
 
-export const DEFAULT_AGENT: UserAgentConfig = {
-    name: '',
-    role: 2,
-    persona: {
-        communication_style: '',
-        domain_knowledge_level: '',
-        clarity_level: '',
-        revelation_strategy: '',
-        revelation_rate: '',
-    },
-    provider: 'ollama',
-    model: 'llama2',
-    params: {
-        temperature: 0.0,
-        top_p: 1.0,
-        max_tokens: 512,
-    },
-    context_prompt: '',
-    api_key: '',
-};
-
 const UserAgentConfigCard: FC<UserAgentConfigCardProps> = ({ predefined, agents, onChange, onSubmit, onBack, running }) => {
     const updateAgent = (index: number, updated: UserAgentConfig) => {
         onChange(agents.map((a, i) => i === index ? updated : a));
     };
 
-    const addAgent = () => onChange([...agents, { ...DEFAULT_AGENT }]);
+    const addAgent = () => onChange([...agents, { ...DEFAULT_USER_AGENT }]);
 
     const removeAgent = (index: number) => onChange(agents.filter((_, i) => i !== index));
 

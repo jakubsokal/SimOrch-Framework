@@ -1,30 +1,29 @@
 import { type FC, useState } from 'react';
 import { ChevronRight, AlertCircle, AlertTriangle, Info, XCircle, User, Clock, Shield, FileText } from 'lucide-react';
+import { type Issue, type Message } from '../types/simulation';
 
 interface IssueCardProps {
-    issue: any;
-    messageById?: Record<string, any>;
+    issue: Issue;
+    messageById?: Record<string, Message>;
 }
 
 const IssueCard: FC<IssueCardProps> = ({ issue, messageById }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const issueId = issue.issue_id ?? issue.id;
-    const type = issue.issue?.type || issue.type || 'unknown';
-    const severity = issue.issue?.severity || issue.severity || 'low';
-
-    const issueDescription = issue.issue?.description || issue.description || '';
-    const traceMessageId = issue.issue?.trace_message_id ?? issue.trace_message_id ?? null;
-    const tracedMessage = traceMessageId != null ? messageById?.[String(traceMessageId)] : undefined;
-    const originalMessage = tracedMessage?.message || '';
-    const originalMessageId = traceMessageId ?? 'N/A';
-
-    const suggestedAction = issue.issue?.suggested_action || issue.suggested_action;
-    const evidenceQuote = issue.issue?.evidence_quote || issue.evidence_quote || '';
-    const affectsRequirements = issue.issue?.affects_requirements || issue.affects_requirements || [];
-    const createdBy = issue.createdBy || 'Unknown';
-    const timestamp = issue.timestamp || '';
-    const turn = issue.turn_id || issue.turn || 0;
+    const issueId = issue.issue_id;
+    const type = issue.issue.type;
+    const severity = issue.issue.severity;
+    const issueDescription = issue.issue.description;
+    const traceMessageId = issue.trace_message_id;
+    const tracedMessage = messageById?.[String(traceMessageId)];
+    const originalMessage = tracedMessage?.message ?? '';
+    const originalMessageId = traceMessageId;
+    const suggestedAction = issue.issue.suggested_action;
+    const evidenceQuote = issue.issue.evidence_quote;
+    const affectsRequirements = issue.issue.affects_requirements ?? [];
+    const createdBy = issue.createdBy;
+    const timestamp = issue.timestamp;
+    const turn = issue.turn_id;
 
     const formattedTimestamp = timestamp ? new Date(timestamp).toLocaleString() : 'N/A';
 

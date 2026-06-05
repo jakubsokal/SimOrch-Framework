@@ -1,15 +1,8 @@
-import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
+import { createContext, useState, useEffect, type ReactNode } from 'react';
 import { usePopUp } from '../hooks/usePopUp';
+import { type SimulationContextType } from '../types/simulation';
 
-interface SimulationContextType {
-  simulationRunning: boolean;
-  setSimulationRunning: (running: boolean) => void;
-  popUps: ReturnType<typeof usePopUp>['popUps'];
-  addPopUp: ReturnType<typeof usePopUp>['addPopUp'];
-  removePopUp: ReturnType<typeof usePopUp>['removePopUp'];
-}
-
-const SimulationContext = createContext<SimulationContextType | null>(null);
+export const SimulationContext = createContext<SimulationContextType | null>(null);
 
 export function SimulationProvider({ children }: { children: ReactNode }) {
   const [simulationRunning, setSimulationRunning] = useState(
@@ -48,17 +41,11 @@ export function SimulationProvider({ children }: { children: ReactNode }) {
     };
 
     return () => events.close();
-  }, [simulationRunning]);
+  }, [simulationRunning, addPopUp]);
 
   return (
     <SimulationContext.Provider value={{ simulationRunning, setSimulationRunning, popUps, addPopUp, removePopUp }}>
       {children}
     </SimulationContext.Provider>
   );
-}
-
-export function useSimulation() {
-  const context = useContext(SimulationContext);
-  if (!context) throw new Error('useSimulation must be used within SimulationProvider');
-  return context;
 }

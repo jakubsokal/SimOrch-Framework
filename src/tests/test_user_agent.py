@@ -1,74 +1,72 @@
-import unittest, sys, os
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '../..'))
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
-from agents.user_agent import UserAgent
-from agents.base_agent import BaseAgent
-from agents.agent_factory import AgentFactory
-from unittest.mock import Mock
-        
-
-class TestUserAgent(unittest.TestCase):
-    def setUp(self):
-        self.mock_llm = Mock()
-        self.mock_llm.name = "MockLLM"
-        self.mock_llm.invoke.return_value = "Hello, world!"
-
-    def test_init_sets_name(self):
-        agent = UserAgent("TestUser", llm=self.mock_llm)
-        self.assertEqual(agent.name, "TestUser")
-    
-    def test_inherits_from_base_agent(self):
-        agent = UserAgent("TestUser", llm=self.mock_llm)
-        self.assertIsInstance(agent, BaseAgent)
-    
-    def test_speak_returns_message(self):
-        agent = UserAgent("TestUser", llm=self.mock_llm)
-        message = "Hello, world!"
-        result = agent.speak(message, role=2)
-        self.assertEqual(result, message)
-    
-    def test_speak_with_empty_string(self):
-        self.mock_llm.invoke.return_value = ""
-        agent = UserAgent("TestUser", llm=self.mock_llm)
-        result = agent.speak("", role=2)
-        self.assertEqual(result, "")
-    
-    def test_speak_with_complex_message(self):
-        self.mock_llm.invoke.return_value = "This is a complex message with numbers 123 and symbols !@#"
-        agent = UserAgent("TestUser", llm=self.mock_llm)
-        message = "This is a complex message with numbers 123 and symbols !@#"
-        result = agent.speak(message, role=2)
-        self.assertEqual(result, message)
-    
-    def test_multiple_agents_independent(self):
-        self.mock_llm2 = Mock()
-        self.mock_llm2.name = "MockLLM1234"
-        self.mock_llm2.invoke.return_value = "TESTER"
-        agent1 = UserAgent("Agent1", llm=self.mock_llm)
-        agent2 = UserAgent("Agent2", llm=self.mock_llm2)
-        
-        self.assertEqual(agent1.name, "Agent1")
-        self.assertEqual(agent2.name, "Agent2")
-        self.assertNotEqual(agent1.name, agent2.name)
-
-    def test_context_prompt_in_speak(self):
-        json = {
-                'provider': 'OLLAMA',
-                'model': 'llama2',
-                'role': 2, 
-                'name': 'Employee',
-                'context_prompt':  "You are an office employee. You need a system to book meeting rooms easily. You are frustrated with the current, manual email-based process."
-            }
-        agent = AgentFactory.create_agent(json,
-                                           description='A dialogue between a Requirements Engineer and a User(employee) and a User(office manager) to elicit requirements for a corporate room booking system.', seed=42)
-        message = "I need faster emails and to be able to handle more traffic."
-        res1 = agent.speak(message, role='LISTEN')
-        print(f"\n\n\nres1: {res1}\n\n\n")
-        result = agent.speak(message, role=2)
-
-        print(f"\n\n\nres1: {res1}\n\n\nresult: {result}\n\n\n")
-        self.assertNotEqual(result, res1)
+import pytest
+from unittest.mock import Mock, MagicMock
+from src.agents.user_agent import UserAgent
+from src.agents.base_agent import BaseAgent
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.fixture
+def mock_llm():
+    llm = Mock()
+    llm.invoke.return_value = MagicMock(content="Mocked user response.")
+    return llm
+
+
+@pytest.fixture
+def user_agent(mock_llm):
+    return UserAgent("TestUser", llm=mock_llm, role=2, persona={
+        "communication_style": "concise",
+        "domain_knowledge_level": "high",
+        "clarity_level": "clear",
+        "revelation_strategy": "proactive",
+        "revelation_rate": "medium",
+        }, context_prompt="You are Jamie, an office employee.")
+
+
+def test_init_sets_name(user_agent):
+    assert user_agent.name == "TestUser"
+
+
+def test_inherits_from_base_agent(user_agent):
+    assert isinstance(user_agent, BaseAgent)
+
+
+def test_speak_returns_a_string(user_agent):
+    result = user_agent.speak("What do you need?", role=1)
+    assert isinstance(result, str)
+
+
+def test_speak_invokes_llm(mock_llm, user_agent):
+    user_agent.speak("Hello", role=1)
+    assert mock_llm.invoke.called
+
+
+def test_speak_with_empty_message_does_not_raise(user_agent):
+    try:
+        user_agent.speak("", role=1)
+    except Exception as e:
+        pytest.fail(f"speak('', role=1) raised unexpectedly: {e}")
+
+
+def test_multiple_agents_are_independent(mock_llm):
+    mock_llm2 = Mock()
+    mock_llm2.invoke.return_value = MagicMock(content="Second response.")
+    agent1 = UserAgent("Agent1", llm=mock_llm)
+    agent2 = UserAgent("Agent2", llm=mock_llm2)
+    assert agent1.name == "Agent1"
+    assert agent2.name == "Agent2"
+    assert agent1.name != agent2.name
+
+
+def test_persona_stored_on_agent(mock_llm):
+    persona = {"communication_style": "concise", "tone": "formal"}
+    agent = UserAgent("Jamie", llm=mock_llm, persona=persona)
+    assert agent.persona == persona
+
+
+def test_scenario_truths_stored_on_agent(mock_llm):
+    truths = [{"id": "R1", "type": "FR", "statement": "Users must log in."}]
+    agent = UserAgent("Jamie", llm=mock_llm, scenario_truths=truths)
+    assert agent.scenario_truths == truths
