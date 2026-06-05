@@ -17,7 +17,7 @@ scenario:
     requirements.
   domain: Corporate
   system_type: Booking System
-  max_turns: 5
+  max_turns: 12
   conversation_type: dynamic
 
 scenarioTruths:
